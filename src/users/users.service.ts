@@ -1,26 +1,37 @@
+// src/users/users.service.ts
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
+
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword, // Simpan password yang sudah di-hash
+    });
+
+    return this.usersRepository.save(user);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  // Fungsi untuk mencari user berdasarkan email
+  async findOneByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ email });
   }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  
+  findAll(): Promise<User[]> {
+    return this.usersRepository.find();
   }
 }

@@ -3,9 +3,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // Path ke folder uploads
+      serveRoot: '/uploads', // URL prefix, e.g., http://localhost:3000/uploads/filename.jpg
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres', // Tipe database yang kita gunakan
       host: 'localhost', // Alamat server database, 'localhost' jika di komputer yang sama
@@ -17,6 +25,8 @@ import { UsersModule } from './users/users.module';
       synchronize: true, // PENTING: Otomatis membuat tabel berdasarkan entity (hanya untuk development)
     }),
     UsersModule,
+    AuthModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
